@@ -82,19 +82,6 @@ watch(openForm, (val) => {
     window.scrollTo(0, 0); // Scroll ke atas saat buka/tutup form
 });
 
-watch(selectedCategory, (newCategory) => {
-    if (paginateRef.value) {
-        const params = { per: 10 }; // Set jumlah item per halaman
-        if (newCategory) {
-            params.category = newCategory; // Mengirim kategori sebagai parameter
-        } else {
-            delete params.category; // Menghapus parameter kategori jika tidak ada
-        }
-        paginateRef.value.setParams(params); // Set parameter untuk request
-        paginateRef.value.refetch(); // Meminta ulang data
-    }
-});
-
 
 </script>
 

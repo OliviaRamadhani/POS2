@@ -91,43 +91,43 @@ function submit() {
     const method = "post";
 
     axios({
-        method: method,
-        url: apiEndpoint,
-        data: formDataToSubmit,
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
-    })
-        .then(() => {
-            emit("refresh");
-            emit("close");
-            toast.success("Produk berhasil disimpan");
-            formRef.value.resetForm();
-        })
-        .catch((err: any) => {
-            formRef.value.setErrors(err.response.data.errors);
-            toast.error(err.response.data.message);
-        })
-        .finally(() => {
-            unblock(document.getElementById("form-produk"));
-        });
-}
+            method: method,
+            url: apiEndpoint,
+            data: formDataToSubmit,
+            headers: {
+                    "Content-Type": "multipart/form-data",
+                    },
+                })
+                .then(() => {
+                    emit("refresh");
+                    emit("close");
+                    toast.success("Produk berhasil disimpan");
+                    formRef.value.resetForm();
+                })
+                .catch((err: any) => {
+                    formRef.value.setErrors(err.response.data.errors);
+                    toast.error(err.response.data.message);
+                })
+                .finally(() => {
+                    unblock(document.getElementById("form-produk"));
+                });
+            }
 
-onMounted(() => {
-    if (props.selected) {
-        getEdit();
-    }
-});
+            onMounted(() => {
+                if (props.selected) {
+                    getEdit();
+                }
+            });
 
-watch(
-    () => props.selected,
-    () => {
-        if (props.selected) {
-            toast.info("Toas")
-            getEdit();
-        }
-    }
-);
+            watch(
+                () => props.selected,
+                () => {
+                    if (props.selected) {
+                        toast.info("Toas")
+                        getEdit();
+                    }
+                }
+            );
 </script>
 
 <template>
@@ -244,7 +244,7 @@ watch(
                             :files="photo"
                             :accepted-file-types="fileTypes"
                             required
-                            v-on:updatefiles="(file) => (photo = file)"
+                            v-on:updatefiles="(file: File[]) => (photo = file)"
                         ></file-upload>
                         <div v-if="imagePreview" class="mt-3">
                             <img :src="imagePreview" alt="Image Preview" class="img-thumbnail" style="max-width: 200px;">
