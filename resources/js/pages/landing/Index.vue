@@ -484,36 +484,70 @@
         </div>
 
         <!-- Date -->
-        <<div class="col-md-6">
-    <div class="fv-row mb-7">
-        <label class="form-label fw-bold fs-6 required">Tanggal</label>
-        <Flatpickr
-            class="form-control form-control-lg form-control-solid"
-            v-model="reservation.date"
-            :config="{ dateFormat: 'Y-m-d' }"
-            @change="fetchTotalReservations"
-        />
-        <div class="fv-help-block">
-            <ErrorMessage name="date" />
-        </div>
-    </div>
-</div>
-
-
-
-          <div class="time-container">
-            <!-- Start Time -->
-            <div class="Ji">
-              <label for="start-time" class="form-label">Start Time:</label>
-              <input type="time" id="start-time" v-model="reservation.start_time" class="form-control" required />
-            </div>
-
-            <!-- End Time -->
-            <div class="Ji">
-              <label for="end-time" class="form-label">End Time:</label>
-              <input type="time" id="end-time" v-model="reservation.end_time" class="form-control" required />
+        <!-- <div class="col-md-6"> -->
+          <div class="fv-row mb-7">
+            <label class="form-label fw-bold fs-4 required">Select Date</label>
+            <Flatpickr
+              class="form-control form-control-lg form-control-solid"
+              v-model="reservation.date"
+              :config="{ 
+                dateFormat: 'Y-m-d',
+                disable: [
+                  function(date) {
+                    // Disable Sundays (0 represents Sunday in JavaScript)
+                    return date.getDay() === 0;
+                  }
+                ]
+              }"
+              @change="fetchTotalReservations"
+            />
+            <div class="fv-help-block">
+              <ErrorMessage name="date" />
             </div>
           </div>
+
+<!-- </div> -->
+
+
+
+<div class="time-container">
+  <!-- Start Time -->
+  <div class="Ji">
+    <label for="start-time" class="form-label">Start Time:</label>
+    <Flatpickr
+      v-model="reservation.start_time"
+      class="form-control"
+      :config="{ 
+        enableTime: true, 
+        noCalendar: true, 
+        dateFormat: 'H:i', 
+        time_24hr: true,
+        minTime: '10:00',
+        maxTime: '20:00'
+      }"
+      placeholder="Select Start Time"
+    />
+  </div>
+
+  <!-- End Time -->
+  <div class="Ji">
+    <label for="end-time" class="form-label">End Time:</label>
+    <Flatpickr
+      v-model="reservation.end_time"
+      class="form-control"
+      :config="{ 
+        enableTime: true, 
+        noCalendar: true, 
+        dateFormat: 'H:i', 
+        time_24hr: true,
+        minTime: '10:00',
+        maxTime: '20:00'
+      }"
+      placeholder="Select End Time"
+    />
+  </div>
+</div>
+
         </div>
 
       <!-- Right Column -->
@@ -632,7 +666,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import Flatpickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
-import Datepicker from 'vue3-datepicker'
+
 
 
 
