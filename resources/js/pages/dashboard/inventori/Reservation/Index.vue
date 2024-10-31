@@ -243,10 +243,110 @@ const getReservationStatus = (reservation: any) => {
 
 // Function to print reservations
 const printReservations = () => {
-  // Printing logic here
+  // Cek apakah filteredReservations, totalReservations, dan totalGuests terdefinisi
+  if (!filteredReservations || !totalReservations || !totalGuests) {
+    console.error("Reservations data not found");
+    return;
+  }
+
+  // Fungsi untuk memformat tanggal dari 'YYYY-MM-DD' ke 'DD MMMM YYYY'
+  const formatDate = (dateStr) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const dateObj = new Date(dateStr);
+    return dateObj.toLocaleDateString('id-ID', options); // Format sesuai dengan lokal 'id-ID'
+  };
+
+  // Path ke gambar logo, pastikan logo bisa diakses
+  const logoPath = "{{ asset('media/avatars/spice.png') }}";
+
+  const printContent = `
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        color: #333;
+        background-color: #f9f9f9;
+      }
+      h1 {
+        color: #4A90E2;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      table, th, td {
+        border: 1px solid #333;
+        padding: 10px;
+      }
+      th {
+        background-color: #f2f2f2;
+        text-align: left;
+      }
+    </style>
+
+    <div style="text-align: center;">
+      <img src="${logoPath}" alt="Logo" style="width: 100px; height: auto;">
+      <h1>Reservations List</h1>
+      <p>Total Reservations: ${totalReservations.value}</p>
+      <p>Total Guests: ${totalGuests.value}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Date</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Guests</th>
+                <th>Orders</th>
+                <th>Total</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${filteredReservations.value.map(reservation => `
+                <tr>
+                    <td>${reservation.id}</td>
+                    <td>${reservation.name}</td>
+                    <td>${reservation.phone}</td>
+                    <td>${formatDate(reservation.date)}</td> <!-- Format tanggal di sini -->
+                    <td>${reservation.start_time}</td>
+                    <td>${reservation.end_time}</td>
+                    <td>${reservation.guests}</td>
+                    <td>${reservation.menus}</td>
+                    <td>${reservation.total_price}</td>
+                    <td>${getReservationStatus(reservation)}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5" style="text-align: left;">Total Reservations: ${totalReservations.value}</td>
+                <td colspan="3" style="text-align: left;">Total Guests: ${totalGuests.value}</td>
+            </tr>
+        </tfoot>
+    </table>
+  `;
+
+  const printWindow = window.open('', '_blank');
+  printWindow?.document.write(printContent);
+  printWindow?.document.close();
+  printWindow?.focus();
+  printWindow?.print();
+  printWindow?.close();
 };
 
-// Function to export reservations to Excel
+
+
+
+
+// Function to export reservations to Excel (dummy function)
 const exportReservations = async () => {
   // Exporting logic here
 };

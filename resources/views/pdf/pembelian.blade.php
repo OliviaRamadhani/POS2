@@ -32,13 +32,9 @@
             font-size: 18px;
             margin-bottom: 5px;
         }
-        h2 {
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
         h3 {
             font-size: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
         }
         table {
             width: 100%;
@@ -72,18 +68,21 @@
             margin-top: 20px;
             font-size: 12px;
         }
-        /* Styling for customer details in two columns */
         .customer-info {
             display: flex;
             justify-content: space-between;
             font-size: 12px;
-            margin-bottom: 10px;
+            margin: 5px 0;
         }
-        /* Horizontal line styling */
-        hr {
-            border: 0;
-            border-top: 1px solid #000;
+        .separator {
+            border-top: 1px dashed #000;
             margin: 10px 0;
+        }
+        .id-pembelian {
+            font-size: 50px; /* Increase font size */
+            text-align: center; /* Center the text */
+            font-weight: bold; /* Make it bold for emphasis */
+            margin: 10px 0; /* Add margin for spacing */
         }
     </style>
 </head>
@@ -98,27 +97,20 @@
         <h3> Jl. Sambikerep No. 78</h3>
         <h3> IG : @siamspiceco_</h3>
         
-        <hr> <!-- Garis pemisah setelah bagian 1 -->
-
         <!-- BAGIAN 2: Informasi Customer, ID Pembelian, Tanggal, dan Jam -->
+        <div class="customer-info id-pembelian">
+            <span>{{ $pembelian->id }}</span>
+        </div>
         <div class="customer-info">
             <span>Tanggal:</span>
             <span>{{ $pembelian->created_at->format('d-m-Y') }}</span>
         </div>
         <div class="customer-info">
-            <span>Jam:</span>
-            <span>{{ $pembelian->created_at->format('H:i:s') }}</span>
-        </div>
-        <div class="customer-info">
-            <span>Nama Customer:</span>
+            <span>Nama :</span>
             <span>{{ $pembelian->customer_name }}</span>
         </div>
-        <div class="customer-info">
-            <span>ID Pembelian:</span>
-            <span>{{ $pembelian->id }}</span>
-        </div>
         
-        <hr> <!-- Garis pemisah setelah bagian 2 -->
+        <hr>
 
         <!-- BAGIAN 3: Daftar item pembelian -->
         <table>
@@ -138,14 +130,10 @@
             </tbody>
         </table>
 
-        <hr> <!-- Garis pemisah setelah daftar item -->
-
         <!-- BAGIAN 4: Total harga -->
         <div class="total">
             Total: Rp {{ number_format($pembelian->total_price, 0, ',', '.') }}
         </div>
-
-        <hr> <!-- Garis pemisah sebelum footer -->
 
         <!-- BAGIAN 5: Footer -->
         <div class="footer">

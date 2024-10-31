@@ -150,11 +150,11 @@ const routes: Array<RouteRecordRaw> = [
 
     {
         path: "/landing",
-        redirect: "/landing/PAGE",
+        redirect: "/landing/page",
         component: () => import("@/layouts/kasir/DefaultLayout.vue"),
         children: [
             {
-                path: "/landing/PAGE",
+                path: "/landing/page",
                 name: "/landing.index",
                 component: () => import("@/pages/landing/Index.vue"),
                 meta: {

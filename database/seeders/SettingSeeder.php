@@ -19,7 +19,7 @@ class SettingSeeder extends Seeder
         Setting::create([
             'app' => 'Siam Spice Co.',
             'description' =>  'Aplikasi Siam Spice Co.',
-            'logo' =>  '/LOGO.png',
+            'logo' =>  '/spice.png',
             'bg_auth' =>  '/media/misc/bg-auth.jpg',
             'banner' =>  '/media/misc/banner.jpg',
             'pemerintah' =>  '-',

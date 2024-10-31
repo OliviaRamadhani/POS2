@@ -93,7 +93,7 @@ const handleGeneratePDF = async () => {
       // // Buat link untuk download
       // const fileLink = document.createElement('a');
       // fileLink.href = fileURL;
-      // fileLink.setAttribute('download', `struk_pembelian_${uuid}.pdf`);
+      // fileLink.setAttribute('download', struk_pembelian_${uuid}.pdf);
 
       // // Klik link secara otomatis untuk download
       // document.body.appendChild(fileLink);
@@ -112,7 +112,7 @@ const handleGeneratePDF = async () => {
 // const generatePDF = async (uuid: string) => {
 //   try {
 //     // Panggil API untuk mendapatkan data pembelian
-//     const response = await axios.get(`/api/pembelian/${uuid}`);
+//     const response = await axios.get(/api/pembelian/${uuid});
 
 //     if (response.data.success) {
 //       const pembelian = response.data.data;
@@ -126,8 +126,8 @@ const handleGeneratePDF = async () => {
 
 //       // Informasi dasar
 //       doc.setFontSize(12);
-//       doc.text(`ID Pembelian: ${pembelian.uuid}`, 10, 20);
-//       doc.text(`Tanggal: ${new Date(pembelian.created_at).toLocaleDateString()}`, 10, 30);
+//       doc.text(ID Pembelian: ${pembelian.uuid}, 10, 20);
+//       doc.text(Tanggal: ${new Date(pembelian.created_at).toLocaleDateString()}, 10, 30);
 
 //       // Tambahkan tabel produk
 //       let startY = 40;
@@ -146,14 +146,14 @@ const handleGeneratePDF = async () => {
 //       // Tambahkan total harga
 //       startY += 20;
 //       doc.setFontSize(14);
-//       doc.text(`Total Harga: Rp ${pembelian.total_price}`, 10, startY);
+//       doc.text(Total Harga: Rp ${pembelian.total_price}, 10, startY);
 
 //       // Tambahkan status pembayaran
 //       startY += 10;
-//       doc.text(`Status Pembayaran: ${pembelian.status}`, 10, startY);
+//       doc.text(Status Pembayaran: ${pembelian.status}, 10, startY);
 
 //       // Download PDF
-//       doc.save(`struk_pembelian_${pembelian.uuid}.pdf`);
+//       doc.save(struk_pembelian_${pembelian.uuid}.pdf);
 //     } else {
 //       console.error('Pembelian tidak ditemukan');
 //     }
@@ -184,7 +184,7 @@ function handlePayment() {
   //   return;
   // }
 
-  // axios.post(`/orders/checkout/${uuid}`)
+  // axios.post(/orders/checkout/${uuid})
   //   .then(response => {
       // if (window.snap) {
       //   window.snap.pay(response.data.payment_url, {

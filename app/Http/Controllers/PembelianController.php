@@ -179,7 +179,7 @@ class PembelianController extends Controller
 }
 
 
-    public function generatePDF($uuid)
+public function generatePDF($uuid)
 {
     // Cari pembelian berdasarkan UUID
     $pembelian = Pembelian::with('item')->where('uuid', $uuid)->first();

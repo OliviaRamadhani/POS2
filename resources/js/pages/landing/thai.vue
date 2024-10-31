@@ -4,7 +4,7 @@
       <source src="@/assets/images/asiks.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
-    <router-link to="/landing/PAGE">
+    <router-link to="/landing/page">
       <button class="btn btn-lg btn-secondary">
         <i class="fas fa-arrow-left "></i>
       </button>

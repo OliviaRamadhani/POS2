@@ -235,7 +235,7 @@ watch(
                             v-on:updatefiles="(file) => (photo = file)"
                         ></file-upload>
                         <div v-if="imagePreview" class="mt-3">
-                            <img :src="imagePreview" alt="Image Preview" class="img-thumbnail" style="max-width: 200px;">
+                            <img :="imagePreview" alt="Image Preview" class="img-thumbnail" style="max-width: 200px;">
                         </div>
                     </div>
                 </div>
