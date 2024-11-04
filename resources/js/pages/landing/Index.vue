@@ -1213,7 +1213,7 @@ onMounted(() => {
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Increase shadow on hover */
-  transform: scale(1.08); /* Efek zoom saat hover */
+  transform: scale(1.08); /* Efek zoom saat hover *
 }
 
 .card-body {
