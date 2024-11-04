@@ -24,63 +24,64 @@
     </div>
 
     
-     <!-- Filter, Sort and Total section -->
-    <div class="card-body">
-            <div class="col-md-4 mb-4">
-                <label
-                    class="form-label fw-bold fs-6 required"
-                    for="date-picker"
-                >
-                    <i class="la la-calendar"></i> Pilih Tanggal
-                </label>
-                <VuePicDatePicker
-                    id="date-picker"
-                    v-model="selectedDate"
-                    :format="dateFormat"
-                    @update:model-value="filterByDate"
-                    :min-date="minDate"
-                    :max-date="maxDate"
-                    class="form-control form-control-lg form-control-solid"
-                />
-            </div>
-        </div>
+    <!-- Filter and Sort section -->
+<div class="card-body">
+  <div class="row align-items-end">
+    <!-- Filter by Date -->
+    <div class="col-md-4">
+      <div class="fv-row">
+        <label class="form-label fw-bold fs-6 required" for="date-picker">
+          <i class="la la-calendar"></i> Filter by Date
+        </label>
+        <VuePicDatePicker
+          id="date-picker"
+          v-model="selectedDate"
+          :format="dateFormat"
+          @update:model-value="filterByDate"
+          :min-date="minDate"
+          class="form-control form-control-lg form-control-solid"
+        />
+      </div>
+    </div>
 
-        <!-- Sort by Date -->
-        <div class="col-md-4">
-          <div class="fv-row">
-            <label class="form-label fw-bold fs-6 required" for="sort-date">
-              <i class="la la-sort"></i> Sort by Date
-            </label>
-            <select
-              id="sort-date"
-              v-model="sortOrder"
-              @change="sortReservations"
-              class="form-control form-control-lg form-control-solid"
-            >
-              <option value="asc">Oldest First</option>
-              <option value="desc">Newest First</option>
-            </select>
-          </div>
-        </div>
+    <!-- Sort by Date -->
+    <div class="col-md-4">
+      <div class="fv-row">
+        <label class="form-label fw-bold fs-6 required" for="sort-date">
+          <i class="la la-sort"></i> Sort by Date
+        </label>
+        <select
+          id="sort-date"
+          v-model="sortOrder"
+          @change="sortReservations"
+          class="form-control form-control-lg form-control-solid"
+        >
+          <option value="asc">Oldest First</option>
+          <option value="desc">Newest First</option>
+        </select>
+      </div>
+    </div>
 
-        <!-- Sort by Status -->
-        <div class="col-md-4">
-          <div class="fv-row">
-            <label class="form-label fw-bold fs-6 required" for="sort-status">
-              <i class="la la-toggle-on"></i> Sort by Status
-            </label>
-            <select
-              id="sort-status"
-              v-model="sortStatus"
-              @change="sortReservations"
-              class="form-control form-control-lg form-control-solid"
-            >
-              <option value="">All</option>
-              <option value="active">Active</option>
-              <option value="ended">Reservation Ended</option>
-            </select>
-          </div>
-        </div>
+    <!-- Sort by Status -->
+    <div class="col-md-4">
+      <div class="fv-row">
+        <label class="form-label fw-bold fs-6 required" for="sort-status">
+          <i class="la la-toggle-on"></i> Sort by Status
+        </label>
+        <select
+          id="sort-status"
+          v-model="sortStatus"
+          @change="sortReservations"
+          class="form-control form-control-lg form-control-solid"
+        >
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="ended">Reservation Ended</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
 
         <!-- Total Reservations and Guests -->
         <div class="col-md-4 text-center my-4">
