@@ -348,7 +348,23 @@ const printReservations = () => {
 
 // Function to export reservations to Excel (dummy function)
 const exportReservations = async () => {
-  // Exporting logic here
+  try {
+    const response = await axios({
+      url: 'http://localhost:8000/api/reservations/export', // API endpoint
+      method: 'GET',
+      responseType: 'blob' // Penting untuk men-download file
+    });
+
+    // Buat URL sementara untuk file
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'DATA RESERVASI SIAM.xlsx'); // Nama file yang di-download
+    document.body.appendChild(link);
+    link.click(); // Klik otomatis untuk men-download
+  } catch (error) {
+    console.error('Error exporting reservations:', error);
+  }
 };
 
 // When the component mounts, fetch reservations

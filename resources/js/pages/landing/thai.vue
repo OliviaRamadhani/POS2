@@ -738,7 +738,7 @@ const closeCart = () => {
 }
 
 .item-description {
-  font-size: 1.2rem;
+  font-size: 100%;
   color: #666;
   margin: 10px 0;
 }
@@ -847,7 +847,7 @@ const closeCart = () => {
   /* Latar belakang transparan */
   color: white;
   padding: 10px 20px;
-  font-size: 1.5rem;
+  font-size: 100%;
   font-weight: bold;
   border-radius: 5px;
   text-transform: uppercase;

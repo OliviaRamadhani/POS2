@@ -1,166 +1,8 @@
-<template>
-    <div class="card mb-4">
-      <div class="card-header d-flex align-items-center">
-        <h2 class="mb-0">Laporan Transaksi</h2>
-  
-        <!-- Button for printing the reservations list -->
-        <button
-          type="button"
-          class="btn btn-sm btn-secondary ms-auto"
-          @click="printTransaction"
-        >
-          Print
-          <i class="la la-print"></i>
-        </button>
-  
-        <!-- Button for exporting the reservations list to Excel -->
-        <button
-          type="button"
-          class="btn btn-sm btn-secondary ms-2"
-          @click="exportTransaction"
-        >
-          Export Excel
-          <i class="la la-file-excel"></i>
-        </button>
-      </div>
-
-        <div class="card-body">
-            <div class="col-md-4 mb-4">
-                <label
-                    class="form-label fw-bold fs-6 required"
-                    for="date-picker"
-                >
-                    <i class="la la-calendar"></i> Pilih Tanggal
-                </label>
-                <VuePicDatePicker
-                    id="date-picker"
-                    v-model="selectedDate"
-                    :format="dateFormat"
-                    @update:model-value="filterByDate"
-                    :min-date="minDate"
-                    :max-date="maxDate"
-                    class="form-control form-control-lg form-control-solid"
-                />
-            </div>
-
-            <div v-if="isLoading" class="d-flex justify-content-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
-
-            <div v-else-if="error" class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-
-            <div
-                v-else-if="!transactions.length && selectedDate"
-                class="alert alert-info"
-                role="alert"
-            >
-                Tidak ada transaksi pada tanggal yang dipilih
-            </div>
-
-            <paginate
-                v-else
-                ref="paginateRef"
-                id="table-transactions"
-                url="/inventori/laporan"
-                :columns="columns"
-                :data="transactions"
-            />
-        </div>
-    </div>
-
-    <!-- Transaction Detail Modal -->
-    <TransitionRoot appear :show="!!selectedTransaction" as="template">
-        <Dialog as="div" class="modal-overlay" @close="closeModal">
-            <div class="modal-content">
-                <DialogTitle as="div" class="modal-header">
-                    <h5>Detail Transaksi</h5>
-                    <button class="modal-close" @click="closeModal">
-                        &times;
-                    </button>
-                </DialogTitle>
-
-                <div class="modal-body" v-if="selectedTransaction">
-                    <dl class="transaction-details">
-                        <div class="detail-item">
-                            <dt>ID Pembelian:</dt>
-                            <dd>{{ formatId(selectedTransaction.id) }}</dd>
-                        </div>
-                        <div class="detail-item">
-                            <dt>Nama:</dt>
-                            <dd>{{ selectedTransaction.customer_name }}</dd>
-                        </div>
-                        <div class="detail-item">
-                            <dt>Pesanan:</dt>
-                            <dd>
-                                <ul class="items-list">
-                                    <li
-                                        v-for="item in parseItems(
-                                            selectedTransaction.items
-                                        )"
-                                        :key="item"
-                                    >
-                                        {{ item }}
-                                    </li>
-                                </ul>
-                            </dd>
-                        </div>
-                        <div class="detail-item">
-                            <dt>Total Harga:</dt>
-                            <dd>
-                                {{
-                                    formatRupiah(
-                                        selectedTransaction.total_price
-                                    )
-                                }}
-                            </dd>
-                        </div>
-                        <div class="detail-item">
-                            <dt>Status Pembayaran:</dt>
-                            <dd>
-                                <span
-                                    :class="
-                                        getStatusClass(
-                                            selectedTransaction.status
-                                        )
-                                    "
-                                >
-                                    {{ selectedTransaction.status }}
-                                </span>
-                            </dd>
-                        </div>
-                        <div class="detail-item">
-                            <dt>Tanggal Transaksi:</dt>
-                            <dd>
-                                {{ formatDate(selectedTransaction.created_at) }}
-                            </dd>
-                        </div>
-                    </dl>
-
-                    <button
-                        @click="markAsProcessed(selectedTransaction)"
-                        class="btn btn-primary mt-4 w-100"
-                        :disabled="isProcessing"
-                    >
-                        {{
-                            isProcessing
-                                ? "Memproses..."
-                                : "Tandai Sudah Diproses"
-                        }}
-                    </button>
-                </div>
-            </div>
-        </Dialog>
-    </TransitionRoot>
-</template>
-
 <script setup lang="ts">
 import { h, ref, onMounted } from "vue";
-import { Dialog, DialogTitle, TransitionRoot } from "@headlessui/vue";
+// import { Dialog, DialogTitle, TransitionRoot } from "@headlessui/vue";
 import { createColumnHelper } from "@tanstack/vue-table";
+import {useDelete} from "@/libs/hooks";
 import VuePicDatePicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
 import axios from "@/libs/axios";
@@ -183,11 +25,13 @@ const selectedDate = ref<Date | null>(null);
 const isLoading = ref(false);
 const error = ref<string>("");
 const isProcessing = ref(false);
+const paginateRef = ref<any>(null);
 
 // Constants
 const dateFormat = "yyyy-MM-dd";
 const minDate = new Date("2020-01-01");
 const maxDate = new Date();
+
 
 // Fungsi untuk mencetak laporan transaksi
 const printTransaction = async () => {
@@ -244,25 +88,25 @@ const printTransaction = async () => {
                         <tr>
                             <th>No</th>
                             <th>ID Pembelian</th>
-                            <th>Nama Pelanggan</th>
-                            <th>Produk yang Dibeli</th>
-                            <th>Status Pembayaran</th>
+                            <th>Nama</th>
+                            <th>Pesanan</th>
                             <th>Total</th>
+                            <th>Status Pembayaran</th>
                             <th>Tanggal Pesanan</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${transactions.map((transaction, index) => {
-                            const formattedDate = new Date(transaction.created_at).toISOString().split("T")[0];
-                            const items = transaction.items.split("\n").map(item => `<div>${item}</div>`).join("");
+                            // Mengonversi tanggal ke format YYYY-MM-DD
+                            const formattedDate = new Date(transaction.created_at).toISOString().substring(0, 10);
                             return `
                                 <tr>
                                     <td>${index + 1}</td>
-                                    <td>${formatId(transaction.id)}</td>
-                                    <td>${transaction.customer_name}</td>
-                                    <td>${items}</td>
-                                    <td>${transaction.status}</td>
+                                    <td>${transaction.id}</td>
+                                    <th>${transaction.customer_name}</th>
+                                    <td>${transaction.items}</td>
                                     <td>${formatRupiah(transaction.total_price)}</td>
+                                    <td>${transaction.status}</td>
                                     <td>${formattedDate}</td>
                                 </tr>
                             `;
@@ -292,6 +136,7 @@ const printTransaction = async () => {
         console.error("Error fetching transactions for printing:", error);
     }
 };
+
 
 
 
@@ -379,16 +224,9 @@ const markAsProcessed = async (transaction: Pembelian) => {
     }
 };
 
-const deletePembelian = async (url: string) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) return;
-
-    try {
-        await axios.delete(url);
-        await filterByDate(selectedDate.value);
-    } catch (err) {
-        error.value = "Gagal menghapus transaksi";
-    }
-};
+const { delete: deletePembelian } = useDelete({
+    onSuccess: () => paginateRef.value.refetch(),
+})
 
 // Table columns configuration
 const columns = [
@@ -472,7 +310,112 @@ onMounted(async () => {
         await filterByDate(selectedDate.value);
     }
 });
+
+const refresh = () => paginateRef.value.refetch();
 </script>
+
+<template>
+    <div class="card mb-4">
+      <div class="card-header d-flex align-items-center">
+        <h2 class="mb-0">Laporan Transaksi</h2>
+  
+        <!-- Button for printing the reservations list -->
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary ms-auto"
+          @click="printTransaction"
+        >
+          Print
+          <i class="la la-print"></i>
+        </button>
+  
+        <!-- Button for exporting the reservations list to Excel -->
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary ms-2"
+          @click="exportTransaction"
+        >
+          Export Excel
+          <i class="la la-file-excel"></i>
+        </button>
+      </div>
+  
+      <!-- filter by date -->
+      <div class="card-body">
+            <div class="col-md-4 mb-4">
+                <label
+                    class="form-label fw-bold fs-6 required"
+                    for="date-picker"
+                >
+                    <i class="la la-calendar"></i> Pilih Tanggal
+                </label>
+                <VuePicDatePicker
+                    id="date-picker"
+                    v-model="selectedDate"
+                    :format="dateFormat"
+                    @update:model-value="filterByDate"
+                    :min-date="minDate"
+                    class="form-control form-control-lg form-control-solid"
+                />
+            </div>
+
+            <div v-if="isLoading" class="d-flex justify-content-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+
+            <div v-else-if="error" class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+
+            <div
+                v-else-if="!transactions.length && selectedDate"
+                class="alert alert-info"
+                role="alert"
+            >
+                Tidak ada transaksi pada tanggal yang dipilih
+            </div>
+
+            <paginate
+                v-else
+                ref="paginateRef"
+                id="table-transactions"
+                url="/inventori/laporan"
+                :columns="columns"
+                :data="transactions"
+            />
+        </div>
+    </div>
+    
+  
+    <!-- Detail Transaksi Modal -->
+    <div v-if="selectedTransaction" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5>Detail Transaksi</h5>
+          <button class="modal-close" @click="selectedTransaction = null">
+            &times;
+          </button>
+        </div>
+  
+        <div class="modal-body">
+          <p><strong>ID Pembelian:</strong> {{ selectedTransaction?.id }}</p>
+          <p><strong>Nama:</strong> {{ selectedTransaction?.customer_name }}</p>
+          <p><strong>Pesanan:</strong> {{ selectedTransaction?.items }}</p>
+          <p><strong>Total Harga:</strong> {{ formatRupiah(selectedTransaction?.total_price) }}</p>
+          <p><strong>Status Pembayaran:</strong> {{ selectedTransaction?.status }}</p>
+          <p><strong>Tanggal Transaksi:</strong> {{ new Date(selectedTransaction?.created_at).toLocaleDateString("id-ID") }}</p>
+          <p><strong>Status Pesanan Dibuat:</strong> {{ selectedTransaction?.created ? 'On Process' : 'Procces' }}</p>
+        </div>
+  
+        <button class="btn btn-secondary" @click="selectedTransaction = null">
+          Tutup Detail
+        </button>
+      </div>
+    </div>
+  </template>
+
 
 <style scoped>
 .card {

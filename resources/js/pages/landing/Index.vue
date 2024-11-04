@@ -486,27 +486,22 @@
         <!-- Date -->
         <!-- <div class="col-md-6"> -->
           <div class="fv-row mb-7">
-            <label class="form-label fw-bold fs-4 required">Select Date</label>
-            <Flatpickr
-              class="form-control form-control-lg form-control-solid"
-              v-model="reservation.date"
-              :config="{ 
-                dateFormat: 'Y-m-d',
-                disable: [
-                  function(date) {
-                    // Disable Sundays (0 represents Sunday in JavaScript)
-                    return date.getDay() === 0;
-                  }
-                ]
-              }"
-              @change="fetchTotalReservations"
-            />
-            <div class="fv-help-block">
-              <ErrorMessage name="date" />
-            </div>
-          </div>
+    <label class="form-label fw-bolder fs-4 required">Tanggal</label>
+    <Flatpickr
+        class="form-control form-control-lg form-control-solid"
+        v-model="reservation.date"
+        :config="{
+            dateFormat: 'Y-m-d',
+            disable: [date => date.getDay() === 0] // Membatasi hari Minggu
+        }"
+        @change="fetchTotalReservations"
+    />
+    <div class="fv-help-block">
+        <ErrorMessage name="date" />
+    </div>
+    <!-- </div> -->
+</div>
 
-<!-- </div> -->
 
 
 
