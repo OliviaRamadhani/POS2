@@ -23,6 +23,8 @@ class ReservationSeeder extends Seeder
             'start_time' => '18:00',
             'end_time' => '20:00',
             'guests' => 5,
+            'menus' => '',
+            'total_price' => 0
         ]);
 
         Reservation::create([
@@ -32,6 +34,8 @@ class ReservationSeeder extends Seeder
             'start_time' => '19:00',
             'end_time' => '21:00',
             'guests' => 3,
+            'menus' => '',
+            'total_price' => 0
         ]);
 
         Reservation::create([
@@ -41,6 +45,8 @@ class ReservationSeeder extends Seeder
             'start_time' => '17:00',
             'end_time' => '19:00',
             'guests' => 2,
+            'menus' => '',
+            'total_price' => 0
         ]);
     }
 }

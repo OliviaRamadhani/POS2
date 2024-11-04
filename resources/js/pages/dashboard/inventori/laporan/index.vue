@@ -1,61 +1,37 @@
 <script setup lang="ts">
 import { h, ref, onMounted } from "vue";
-import { useDelete } from "@/libs/hooks";
+// import { Dialog, DialogTitle, TransitionRoot } from "@headlessui/vue";
 import { createColumnHelper } from "@tanstack/vue-table";
-import type { Pembelian } from "@/types/laporan"; // Ganti dengan path yang sesuai
+import VuePicDatePicker from "@vuepic/vue-datepicker";
+import "@vuepic/vue-datepicker/dist/main.css";
 import axios from "@/libs/axios";
 import { formatRupiah } from "@/libs/utilss";
-import DatePicker from 'vue3-datepicker';
+import { FilterHelper } from "../helpers/filterHelper";
 
-const column = createColumnHelper<Pembelian>();
-const paginateRef = ref<any>(null);
-const transactions = ref<Pembelian[]>([]); // Menyimpan data transaksi
+interface Pembelian {
+    id: number;
+    customer_name: string;
+    items: string;
+    total_price: number;
+    status: "Pending" | "Paid" | "Cancelled";
+    created_at: string;
+    created: boolean;
+}
+
+// State management
+const transactions = ref<Pembelian[]>([]);
 const selectedTransaction = ref<Pembelian | null>(null);
-const selectedDate = ref<string>('');
+const selectedDate = ref<Date | null>(null);
+const isLoading = ref(false);
+const error = ref<string>("");
+const isProcessing = ref(false);
+const paginateRef = ref<any>(null);
 
+// Constants
+const dateFormat = "yyyy-MM-dd";
+const minDate = new Date("2020-01-01");
+const maxDate = new Date();
 
-// Fungsi filter transaksi berdasarkan tanggal yang dipilih
-const filterByDate = async () => {
-    if (!selectedDate.value) {
-        transactions.value = []; // Kosongkan data jika tidak ada tanggal dipilih
-        return;
-    }
-
-    try {
-        const formattedDate = new Date(selectedDate.value).toISOString().split('T')[0]; // Format ke YYYY-MM-DD
-        const response = await axios.post('/inventori/laporan', {
-            date: formattedDate, // Kirimkan tanggal yang dipilih ke server
-        });
-        
-        // Pastikan respons berisi data yang diharapkan
-        if (response.data && Array.isArray(response.data)) {
-            transactions.value = response.data; // Update data transaksi berdasarkan respons
-        } else {
-            console.error('Data tidak valid:', response.data);
-            transactions.value = []; // Kosongkan data jika ada error
-        }
-    } catch (error) {
-        console.error('Error fetching transactions', error);
-        transactions.value = []; // Kosongkan data jika ada error
-    }
-};
-
-// Panggil filterByDate ketika komponen dimuat untuk mendapatkan data awal (opsional)
-filterByDate();
-
-const { delete: deletePembelian } = useDelete({
-    onSuccess: () => paginateRef.value.refetch(),
-})
-
-// Mendapatkan data transaksi saat komponen dimuat
-onMounted(async () => {
-    try {
-        const response = await axios.post('/inventori/laporan');
-        transactions.value = response.data; 
-    } catch (error) {
-        console.error('Error fetching transactions:', error);
-    }
-});
 
 // Fungsi untuk mencetak laporan transaksi
 const printTransaction = async () => {
@@ -112,24 +88,33 @@ const printTransaction = async () => {
                         <tr>
                             <th>No</th>
                             <th>ID Pembelian</th>
-                            <th>Status Pembayaran</th>
+                            <th>Nama</th>
+                            <th>Pesanan</th>
                             <th>Total</th>
+                            <th>Status Pembayaran</th>
                             <th>Tanggal Pesanan</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${transactions.map((transaction, index) => `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td>${transaction.pembelian_id}</td>
-                                <td>${transaction.status}</td>
-                                <td>${formatRupiah(transaction.total_price)}</td>
-                            </tr>
-                        `).join('')}
+                        ${transactions.map((transaction, index) => {
+                            // Mengonversi tanggal ke format YYYY-MM-DD
+                            const formattedDate = new Date(transaction.created_at).toISOString().substring(0, 10);
+                            return `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${transaction.id}</td>
+                                    <th>${transaction.customer_name}</th>
+                                    <td>${transaction.items}</td>
+                                    <td>${formatRupiah(transaction.total_price)}</td>
+                                    <td>${transaction.status}</td>
+                                    <td>${formattedDate}</td>
+                                </tr>
+                            `;
+                        }).join('')}
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colspan="5">Total Transaksi: ${transactions.length}</td>
+                            <td colspan="7">Total Transaksi: ${transactions.length}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -139,7 +124,7 @@ const printTransaction = async () => {
 
         const newWindow = window.open('', '_blank');
         if (newWindow) {
- newWindow.document.write(printContent);
+            newWindow.document.write(printContent);
             newWindow.document.close();
             newWindow.print();
             newWindow.close();
@@ -153,17 +138,23 @@ const printTransaction = async () => {
 };
 
 
-// Fungsi untuk mengekspor laporan transaksi ke Excel
+
+
 const exportTransaction = async () => {
     try {
         const response = await axios.get('/inventori/laporan/export', {
             responseType: 'blob',
         });
 
+        // Buat URL objek dari respons data
         const url = window.URL.createObjectURL(new Blob([response.data]));
+        
+        // Buat elemen tautan untuk mengunduh file
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', 'DATA TRANSAKSI SIAM.xlsx');
+
+        // Menyimpan file dengan format tanggal yang telah diformat sebelumnya
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -173,29 +164,73 @@ const exportTransaction = async () => {
 };
 
 
-// Mendapatkan data transaksi saat komponen dimuat
-onMounted(async () => {
+// Column helper
+const column = createColumnHelper<Pembelian>();
+
+// Utility functions
+const formatId = (id: number) => id.toString().padStart(3, "0");
+const formatDate = (date: string) => new Date(date).toLocaleDateString("id-ID");
+const parseItems = (items: string) => items.split("\n").filter(Boolean);
+const closeModal = () => (selectedTransaction.value = null);
+
+const getStatusClass = (status: Pembelian["status"]) => ({
+    "badge bg-warning": status === "Pending",
+    "badge bg-success": status === "Paid",
+    "badge bg-danger": status === "Cancelled",
+});
+
+// API calls
+const filterByDate = async (date: Date | null) => {
+    if (!date) {
+        transactions.value = [];
+        return;
+    }
+
+    isLoading.value = true;
+    error.value = "";
+
     try {
-        const response = await axios.post('/inventori/laporan');
-        transactions.value = response.data;
-        paginateRef.value.refetch(); 
-    } catch (error) {
-        console.error('Error fetching transactions:', error);
+        const formattedDate = date.toISOString().split("T")[0];
+        const response = await axios.post("/inventori/laporan", {
+            date: formattedDate,
+        });
+
+        if (response.data.data && Array.isArray(response.data.data)) {
+            transactions.value = response.data.data;
+        } else {
+            throw new Error("Format data tidak valid");
+        }
+    } catch (err) {
+        error.value =
+            err instanceof Error
+                ? err.message
+                : "Terjadi kesalahan saat mengambil data";
+        transactions.value = [];
+    } finally {
+        isLoading.value = false;
     }
 });
 
 const markAsProcessed = async (transaction: Pembelian) => {
-    // Simpan status pesanan ke backend
-    transaction.created = true; // Mark as processed
+    isProcessing.value = true;
     try {
-        await axios.put(`/inventori/laporan/${transaction.id}`, {
-            created: transaction.created,
-        });
-        paginateRef.value.refetch();
-    } catch (error) {
-        console.error('Error updating transaction status:', error);
+        await axios.put(`/inventori/laporan/${transaction.id}/process`);
+        transaction.created = true;
+        closeModal();
+    } catch (err) {
+        error.value = "Gagal memproses transaksi";
+    } finally {
+        isProcessing.value = false;
     }
 };
+
+const { delete: deletePembelian } = useDelete({
+    onSuccess: () => paginateRef.value.refetch(),
+})
+
+const { delete: deletePembelian } = useDelete({
+    onSuccess: () => paginateRef.value.refetch(),
+})
 
 const columns = [
     column.display({
@@ -233,8 +268,8 @@ const columns = [
         },
     }),
     column.accessor("created", {
-        header: "Pesanan Dibuat",
-        cell: (cell) => cell.getValue() ? "On Process" : "Procces",
+        header: "Status Proses",
+        cell: (info) => (info.getValue() ? "Sudah Diproses" : "Belum Diproses"),
     }),
     column.accessor("id", {
         header: "Aksi",
@@ -271,7 +306,12 @@ const columns = [
     }),
 ];
 
-const refresh = () => paginateRef.value.refetch();
+// Initialize component
+onMounted(async () => {
+    if (selectedDate.value) {
+        await filterByDate(selectedDate.value);
+    }
+});
 </script>
 
 <template>
@@ -302,27 +342,51 @@ const refresh = () => paginateRef.value.refetch();
   
       <!-- filter by date -->
       <div class="card-body">
-    <div class="col-md-4 mb-4">
-      <label class="form-label fw-bold fs-6 required" for="reservation-date">
-        <i class="la la-calendar"></i> Pilih Tanggal
-      </label>
-      <DatePicker
-        v-model="selectedDate"
-        :format="dateFormat"
-        @change="filterByDate"
-        class="form-control form-control-lg form-control-solid"
-      />
+            <div class="col-md-4 mb-4">
+                <label
+                    class="form-label fw-bold fs-6 required"
+                    for="date-picker"
+                >
+                    <i class="la la-calendar"></i> Pilih Tanggal
+                </label>
+                <VuePicDatePicker
+                    id="date-picker"
+                    v-model="selectedDate"
+                    :format="dateFormat"
+                    @update:model-value="filterByDate"
+                    :min-date="minDate"
+                    class="form-control form-control-lg form-control-solid"
+                />
+            </div>
+
+            <div v-if="isLoading" class="d-flex justify-content-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+
+            <div v-else-if="error" class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+
+            <div
+                v-else-if="!transactions.length && selectedDate"
+                class="alert alert-info"
+                role="alert"
+            >
+                Tidak ada transaksi pada tanggal yang dipilih
+            </div>
+
+            <paginate
+                v-else
+                ref="paginateRef"
+                id="table-transactions"
+                url="/inventori/laporan"
+                :columns="columns"
+                :data="transactions"
+            />
+        </div>
     </div>
-  </div>
-  
-        <paginate
-          ref="paginateRef"
-          id="table-transactions"
-          url="/inventori/laporan"
-          :columns="columns"
-          :data="transactions"
-        ></paginate>
-      </div>
     
   
     <!-- Detail Transaksi Modal -->
@@ -352,6 +416,7 @@ const refresh = () => paginateRef.value.refetch();
     </div>
   </template>
 
+
 <style scoped>
   /* CARD STYLING */
   .card {
@@ -372,52 +437,51 @@ const refresh = () => paginateRef.value.refetch();
   /* FORM INPUT */
   .form-control {
     max-width: 300px;
-  }
-  
-  /* MODAL STYLING */
-  .modal-overlay {
+}
+
+.modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
     background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    place-items: center;
     z-index: 1000;
-  }
-  
-  .modal-content {
+}
+
+.modal-content {
     background: white;
-    padding: 20px;
-    border-radius: 10px;
+    padding: 24px;
+    border-radius: 12px;
     width: 90%;
     max-width: 600px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .modal-header {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-  
-  .modal-close {
+    margin-bottom: 16px;
+}
+
+.modal-close {
     cursor: pointer;
     font-size: 1.5rem;
     background: none;
     border: none;
-  }
-  
-  .modal-body {
-    margin-top: 20px;
-  }
-  
-  /* TABLE STYLING */
-  table {
-    border-collapse: collapse;
-    width: 100%;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.modal-close:hover {
+    background-color: #f0f0f0;
+}
+
+.transaction-details {
+    display: grid;
+    gap: 16px;
     margin: 0;
     table-layout: auto; /* Ensure table adapts based on content */
   }
@@ -465,5 +529,9 @@ const refresh = () => paginateRef.value.refetch();
     .form-control {
       max-width: 100%;
     }
-  }
-</style>
+
+    .detail-item {
+        grid-template-columns: 1fr;
+    }
+}
+</style>    
