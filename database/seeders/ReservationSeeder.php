@@ -23,8 +23,8 @@ class ReservationSeeder extends Seeder
             'start_time' => '18:00',
             'end_time' => '20:00',
             'guests' => 5,
-            'menus' => '',
-            'total_price' => 0
+            'menus' => 'Khao Pad x5',
+            'total_price' => 350000
         ]);
 
         Reservation::create([
@@ -32,10 +32,10 @@ class ReservationSeeder extends Seeder
             'phone' => '08198765432',
             'date' => Carbon::now()->addDay()->format('Y-m-d'),
             'start_time' => '19:00',
-            'end_time' => '21:00',
+            'end_time' => '20:00',
             'guests' => 3,
-            'menus' => '',
-            'total_price' => 0
+            'menus' => 'Som Tam x3',
+            'total_price' => 210000
         ]);
 
         Reservation::create([
@@ -45,8 +45,8 @@ class ReservationSeeder extends Seeder
             'start_time' => '17:00',
             'end_time' => '19:00',
             'guests' => 2,
-            'menus' => '',
-            'total_price' => 0
+            'menus' => 'Yam Nua',
+            'total_price' => 225000
         ]);
     }
 }

@@ -347,7 +347,7 @@ const refresh = () => paginateRef.value.refetch();
                     class="form-label fw-bold fs-6 required"
                     for="date-picker"
                 >
-                    <i class="la la-calendar"></i> Pilih Tanggal
+                    <i class="la la-calendar"></i> Filter by Date
                 </label>
                 <VuePicDatePicker
                     id="date-picker"
@@ -375,7 +375,7 @@ const refresh = () => paginateRef.value.refetch();
                 role="alert"
             >
                 Tidak ada transaksi pada tanggal yang dipilih
-            </div>
+            </div>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 
             <paginate
                 v-else
