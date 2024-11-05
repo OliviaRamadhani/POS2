@@ -13,19 +13,18 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Font;
 
 class ReservationsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
 {
     public function collection()
     {
-        $reservations = Reservation::select('id', 'name', 'phone', 'date', 'start_time', 'end_time', 'guests')->get();
+        $reservations = Reservation::select('id', 'name', 'phone', 'date', 'start_time', 'end_time', 'guests', 'menus', 'total_price')->get();
     
-        // Menghitung total
         $totalGuests = $reservations->sum('guests');
         $totalReservations = $reservations->count();
+        $totalRevenue = $reservations->sum('total_price');
     
-        // Menambahkan baris total di akhir
+        // Adding totals row at the end
         $reservations->push((object) [
             'id' => '',
             'name' => 'Total Reservations',
@@ -34,6 +33,8 @@ class ReservationsExport implements FromCollection, WithHeadings, WithMapping, W
             'start_time' => '',
             'end_time' => '',
             'guests' => $totalReservations,
+            'menus' => '',
+            'total_price' => $totalRevenue,
             'status' => ''
         ]);
     
@@ -45,6 +46,8 @@ class ReservationsExport implements FromCollection, WithHeadings, WithMapping, W
             'start_time' => '',
             'end_time' => '',
             'guests' => $totalGuests,
+            'menus' => '',
+            'total_price' => '',
             'status' => ''
         ]);
     
@@ -61,6 +64,8 @@ class ReservationsExport implements FromCollection, WithHeadings, WithMapping, W
             'Start Time',
             'End Time',
             'Guests',
+            'Order',
+            'Total Price',
             'Status',
         ];
     }
@@ -75,18 +80,19 @@ class ReservationsExport implements FromCollection, WithHeadings, WithMapping, W
             $reservation->start_time,
             $reservation->end_time,
             $reservation->guests,
+            $reservation->menus,
+            $reservation->total_price,
             $this->getReservationStatus($reservation),
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        // Gaya untuk header yang lebih modern
+        // Define header style with a strong background and bold white text
         $headerStyle = [
             'font' => [
                 'bold' => true,
-                'size' => 12,
-                'name' => 'Calibri',
+                'size' => 14,
                 'color' => ['argb' => Color::COLOR_WHITE],
             ],
             'alignment' => [
@@ -95,55 +101,71 @@ class ReservationsExport implements FromCollection, WithHeadings, WithMapping, W
             ],
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF2E75B6'], // Warna biru lembut modern
+                'startColor' => ['argb' => 'FF4A86E8'], // Strong blue
             ],
-        ];
-
-        // Terapkan gaya header
-        $sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
-
-        // Gaya border untuk semua data
-        $sheet->getStyle('A1:H' . ($sheet->getHighestRow()))->applyFromArray([
             'borders' => [
                 'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => Color::COLOR_BLACK],
+                    'borderStyle' => Border::BORDER_MEDIUM,
+                    'color' => ['argb' => 'FF000000'], // Black border
                 ],
             ],
-        ]);
+        ];
 
-        // Terapkan gaya untuk baris total
+        // Apply header style
+        $sheet->getStyle('A1:J1')->applyFromArray($headerStyle);
+
+        // Define data rows with alternating light gray background
         $highestRow = $sheet->getHighestRow();
-        $sheet->getStyle('A' . $highestRow . ':H' . $highestRow)
+        for ($i = 2; $i <= $highestRow; $i++) {
+            $rowStyle = ($i % 2 == 0) ? 'FFF2F2F2' : 'FFFFFFFF'; // Alternating gray and white
+            $sheet->getStyle("A{$i}:J{$i}")->applyFromArray([
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['argb' => $rowStyle],
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['argb' => 'FFD3D3D3'],
+                    ],
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                ],
+            ]);
+        }
+
+        // Define style for the totals row at the bottom
+        $sheet->getStyle('A' . ($highestRow - 1) . ':J' . $highestRow)
               ->applyFromArray([
-                  'font' => ['bold' => true, 'name' => 'Calibri'],
-                  'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT],
+                  'font' => [
+                      'bold' => true,
+                      'color' => ['argb' => 'FF4A86E8'], // Matching header color
+                  ],
+                  'alignment' => [
+                      'horizontal' => Alignment::HORIZONTAL_RIGHT,
+                  ],
+                  'borders' => [
+                      'top' => [
+                          'borderStyle' => Border::BORDER_MEDIUM,
+                          'color' => ['argb' => 'FF000000'],
+                      ],
+                  ],
               ]);
 
-        // Gaya untuk data agar lebih modern
-        $sheet->getStyle('A1:H' . ($sheet->getHighestRow()))->applyFromArray([
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-            ],
-            'font' => [
-                'name' => 'Calibri',
-                'size' => 11,
-                'color' => ['argb' => Color::COLOR_BLACK],
-            ],
-        ]);
+        // Adjust column widths
+        $sheet->getColumnDimension('A')->setWidth(10);
+        $sheet->getColumnDimension('B')->setWidth(25);
+        $sheet->getColumnDimension('C')->setWidth(20);
+        $sheet->getColumnDimension('D')->setWidth(15);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(15);
+        $sheet->getColumnDimension('G')->setWidth(10);
+        $sheet->getColumnDimension('H')->setWidth(30);
+        $sheet->getColumnDimension('I')->setWidth(15);
+        $sheet->getColumnDimension('J')->setWidth(15);
 
-        // Atur lebar kolom secara otomatis
-        return [
-            'A' => ['width' => 10],
-            'B' => ['width' => 30],
-            'C' => ['width' => 20],
-            'D' => ['width' => 20],
-            'E' => ['width' => 15],
-            'F' => ['width' => 15],
-            'G' => ['width' => 10],
-            'H' => ['width' => 20],
-        ];
+        return [];
     }
 
     private function getReservationStatus($reservation)

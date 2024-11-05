@@ -23,68 +23,61 @@
       </div>
     </div>
 
-    
-     <!-- Filter, Sort and Total section -->
+    <!-- Filter, Sort, Total Reservations, and Total Guests in One Row -->
     <div class="card-body">
-            <div class="col-md-4 mb-4">
-                <label
-                    class="form-label fw-bold fs-6 required"
-                    for="date-picker"
-                >
-                    <i class="la la-calendar"></i> Pilih Tanggal
-                </label>
-                <VuePicDatePicker
-                    id="date-picker"
-                    v-model="selectedDate"
-                    :format="dateFormat"
-                    @update:model-value="filterByDate"
-                    :min-date="minDate"
-                    :max-date="maxDate"
-                    class="form-control form-control-lg form-control-solid"
-                />
+      <div class="row align-items-center">
+        <!-- Date Picker -->
+        <div class="col-md-4 mb-4">
+          <label class="form-label fw-bold fs-6 required" for="date-picker">
+            <i class="la la-calendar"></i> Select Date
+          </label>
+          <VuePicDatePicker
+            id="date-picker"
+            v-model="selectedDate"
+            :format="dateFormat"
+            @update:model-value="filterByDate"
+            :min-date="minDate"
+            class="form-control form-control-lg form-control-solid"
+          />
+        </div>
+
+        <!-- Sort by Date and Status with Total Reservations and Guests -->
+        <div class="col-md-8 d-flex justify-content-between align-items-center">
+          <div class="d-flex">
+            <div class="fv-row me-3">
+              <label class="form-label fw-bold fs-6 required" for="sort-date">
+                <i class="la la-sort"></i> Sort by Date
+              </label>
+              <select
+                id="sort-date"
+                v-model="sortOrder"
+                @change="sortReservations"
+                class="form-control form-control-lg form-control-solid"
+              >
+                <option value="asc">Oldest First</option>
+                <option value="desc">Newest First</option>
+              </select>
             </div>
-        </div>
 
-        <!-- Sort by Date -->
-        <div class="col-md-4">
-          <div class="fv-row">
-            <label class="form-label fw-bold fs-6 required" for="sort-date">
-              <i class="la la-sort"></i> Sort by Date
-            </label>
-            <select
-              id="sort-date"
-              v-model="sortOrder"
-              @change="sortReservations"
-              class="form-control form-control-lg form-control-solid"
-            >
-              <option value="asc">Oldest First</option>
-              <option value="desc">Newest First</option>
-            </select>
+            <div class="fv-row">
+              <label class="form-label fw-bold fs-6 required" for="sort-status">
+                <i class="la la-toggle-on"></i> Sort by Status
+              </label>
+              <select
+                id="sort-status"
+                v-model="sortStatus"
+                @change="sortReservations"
+                class="form-control form-control-lg form-control-solid"
+              >
+                <option value="">All</option>
+                <option value="active">Active</option>
+                <option value="ended">Reservation Ended</option>
+              </select>
+            </div>
           </div>
-        </div>
 
-        <!-- Sort by Status -->
-        <div class="col-md-4">
-          <div class="fv-row">
-            <label class="form-label fw-bold fs-6 required" for="sort-status">
-              <i class="la la-toggle-on"></i> Sort by Status
-            </label>
-            <select
-              id="sort-status"
-              v-model="sortStatus"
-              @change="sortReservations"
-              class="form-control form-control-lg form-control-solid"
-            >
-              <option value="">All</option>
-              <option value="active">Active</option>
-              <option value="ended">Reservation Ended</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Total Reservations and Guests -->
-        <div class="col-md-4 text-center my-4">
-          <div class="d-flex justify-content-center">
+          <!-- Total Reservations and Guests -->
+          <div class="d-flex">
             <h5 class="mb-0 me-3">
               Total Reservations: <span class="badge bg-primary fs-5 text-white">{{ totalReservations }}</span>
             </h5>
@@ -93,7 +86,8 @@
             </h5>
           </div>
         </div>
-   
+      </div>
+    </div>
 
     <!-- Reservations Table -->
     <div class="card-body">
@@ -126,13 +120,13 @@
             <td>{{ reservation.end_time }}</td>
             <td>{{ reservation.guests }}</td>
             <td>
-                <div>
-                    <ul class="list-unstyled">
-                        <li v-for="(item, index) in reservation.menus.split('\n')" :key="index" class="mb-2">
-                            {{ item }}
-                        </li>
-                    </ul>
-                </div>
+              <div>
+                <ul class="list-unstyled">
+                  <li v-for="(item, index) in reservation.menus.split('\n')" :key="index" class="mb-2">
+                    {{ item }}
+                  </li>
+                </ul>
+              </div>
             </td>
             <td>{{ formatRupiah(reservation.total_price) }}</td>
             <td>{{ getReservationStatus(reservation) }}</td>
@@ -142,6 +136,7 @@
     </div>
   </VForm>
 </template>
+
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
@@ -243,20 +238,20 @@ const getReservationStatus = (reservation: any) => {
 
 // Function to print reservations
 const printReservations = () => {
-  // Cek apakah filteredReservations, totalReservations, dan totalGuests terdefinisi
+  // Check if filteredReservations, totalReservations, and totalGuests are defined
   if (!filteredReservations || !totalReservations || !totalGuests) {
     console.error("Reservations data not found");
     return;
   }
 
-  // Fungsi untuk memformat tanggal dari 'YYYY-MM-DD' ke 'DD MMMM YYYY'
+  // Function to format date from 'YYYY-MM-DD' to 'DD MMMM YYYY'
   const formatDate = (dateStr) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     const dateObj = new Date(dateStr);
-    return dateObj.toLocaleDateString('id-ID', options); // Format sesuai dengan lokal 'id-ID'
+    return dateObj.toLocaleDateString('id-ID', options); // Format in 'id-ID' locale
   };
 
-  // Path ke gambar logo, pastikan logo bisa diakses
+  // Path to the logo image, ensure logo is accessible
   const logoPath = "{{ asset('media/avatars/spice.png') }}";
 
   const printContent = `
@@ -272,17 +267,32 @@ const printReservations = () => {
         font-weight: 600;
         margin-bottom: 10px;
       }
+      .summary {
+        font-size: 16px;
+        margin-bottom: 20px;
+        color: #555;
+      }
       table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
       }
-      table, th, td {
-        border: 1px solid #333;
-        padding: 10px;
+      th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left; /* Default alignment for table cells */
       }
       th {
         background-color: #f2f2f2;
+        font-weight: bold;
+        text-align: center; /* Center the heading text */
+      }
+      td {
+        background-color: #fff;
+      }
+      .total-row td {
+        font-weight: bold;
+        background-color: #f9f9f9;
         text-align: left;
       }
     </style>
@@ -290,47 +300,43 @@ const printReservations = () => {
     <div style="text-align: center;">
       <img src="${logoPath}" alt="Logo" style="width: 100px; height: auto;">
       <h1>Reservations List</h1>
-      <p>Total Reservations: ${totalReservations.value}</p>
-      <p>Total Guests: ${totalGuests.value}</p>
+      <div class="summary">
+        Total Reservations: <span>${totalReservations.value}</span> &nbsp; | &nbsp;
+        Total Guests: <span>${totalGuests.value}</span>
+      </div>
     </div>
 
     <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Date</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Guests</th>
-                <th>Orders</th>
-                <th>Total</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${filteredReservations.value.map(reservation => `
-                <tr>
-                    <td>${reservation.id}</td>
-                    <td>${reservation.name}</td>
-                    <td>${reservation.phone}</td>
-                    <td>${formatDate(reservation.date)}</td> <!-- Format tanggal di sini -->
-                    <td>${reservation.start_time}</td>
-                    <td>${reservation.end_time}</td>
-                    <td>${reservation.guests}</td>
-                    <td>${reservation.menus}</td>
-                    <td>${reservation.total_price}</td>
-                    <td>${getReservationStatus(reservation)}</td>
-                </tr>
-            `).join('')}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="5" style="text-align: left;">Total Reservations: ${totalReservations.value}</td>
-                <td colspan="3" style="text-align: left;">Total Guests: ${totalGuests.value}</td>
-            </tr>
-        </tfoot>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Date</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Guests</th>
+          <th>Orders</th>
+          <th>Total Price</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filteredReservations.value.map(reservation => `
+          <tr>
+            <td>${reservation.id}</td>
+            <td>${reservation.name}</td>
+            <td>${reservation.phone}</td>
+            <td>${formatDate(reservation.date)}</td> <!-- Format date here -->
+            <td>${reservation.start_time}</td>
+            <td>${reservation.end_time}</td>
+            <td>${reservation.guests}</td>
+            <td>${reservation.menus}</td>
+            <td>${reservation.total_price}</td>
+            <td>${getReservationStatus(reservation)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
     </table>
   `;
 
@@ -341,6 +347,8 @@ const printReservations = () => {
   printWindow?.print();
   printWindow?.close();
 };
+
+
 
 
 

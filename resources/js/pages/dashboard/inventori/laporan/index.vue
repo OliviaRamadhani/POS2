@@ -2,11 +2,11 @@
 import { h, ref, onMounted } from "vue";
 // import { Dialog, DialogTitle, TransitionRoot } from "@headlessui/vue";
 import { createColumnHelper } from "@tanstack/vue-table";
+import {useDelete} from "@/libs/hooks";
 import VuePicDatePicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
 import axios from "@/libs/axios";
 import { formatRupiah } from "@/libs/utilss";
-import { FilterHelper } from "../helpers/filterHelper";
 
 interface Pembelian {
     id: number;
@@ -209,7 +209,7 @@ const filterByDate = async (date: Date | null) => {
     } finally {
         isLoading.value = false;
     }
-});
+};
 
 const markAsProcessed = async (transaction: Pembelian) => {
     isProcessing.value = true;
@@ -228,44 +228,49 @@ const { delete: deletePembelian } = useDelete({
     onSuccess: () => paginateRef.value.refetch(),
 })
 
-const { delete: deletePembelian } = useDelete({
-    onSuccess: () => paginateRef.value.refetch(),
-})
-
+// Table columns configuration
 const columns = [
     column.display({
+        id: "number",
         header: "No",
-        cell: (cell) => {
-            return cell.row.index + 1; // Menggunakan indeks baris sebagai nomor urut
-        },
+        cell: (info) => info.row.index + 1,
     }),
     column.accessor("id", {
         header: "ID Pembelian",
-        cell: (cell) => cell.getValue().toString().padStart(3, '0'), // Memastikan minimal 3 digit dengan padding '0'
+        cell: (info) => formatId(info.getValue()),
     }),
     column.accessor("customer_name", {
         header: "Nama",
     }),
     column.accessor("items", {
         header: "Produk yang Dibeli",
-        cell: (cell) => {
-            // Pisahkan setiap produk dengan <br /> untuk membuat jarak vertikal
-            const itemsList = cell.getValue().split("\n").map(item => `<div>${item}</div>`).join('');
-            return h('div', { innerHTML: itemsList }); // Gunakan innerHTML untuk render div dengan newline
-        }
+        cell: (info) => {
+            const items = parseItems(info.getValue());
+            return h(
+                "div",
+                { class: "items-container" },
+                items.map((item) => h("div", { class: "item" }, item))
+            );
+        },
     }),
     column.accessor("total_price", {
         header: "Total",
-        cell: (cell) => formatRupiah(cell.getValue()),
+        cell: (info) => formatRupiah(info.getValue()),
     }),
     column.accessor("status", {
         header: "Status Pembayaran",
+        cell: (info) =>
+            h(
+                "span",
+                {
+                    class: getStatusClass(info.getValue()),
+                },
+                info.getValue()
+            ),
     }),
     column.accessor("created_at", {
         header: "Tanggal Pesanan",
-        cell: (cell) => {
-            return new Date(cell.getValue()).toLocaleDateString("id-ID");
-        },
+        cell: (info) => formatDate(info.getValue()),
     }),
     column.accessor("created", {
         header: "Status Proses",
@@ -273,32 +278,25 @@ const columns = [
     }),
     column.accessor("id", {
         header: "Aksi",
-        cell: (cell) =>
+        cell: (info) =>
             h("div", { class: "d-flex gap-2" }, [
                 h(
                     "button",
                     {
                         class: "btn btn-sm btn-icon btn-info",
-                        onClick: () => selectedTransaction.value = cell.row.original,
+                        onClick: () =>
+                            (selectedTransaction.value = info.row.original),
                     },
                     h("i", { class: "la la-eye fs-2" })
                 ),
-                // h(
-                //     "button",
-                //     {
-                //         class: "btn btn-sm btn-icon btn-success",
-                //         disabled: cell.row.original.created, // Disable if already processed
-                //         onClick: () => markAsProcessed(cell.row.original),
-                //     },
-                //     h("i", { class: "fa fa-check fs-2" }) // Font Awesome check icon
-                    
-                // ),
                 h(
                     "button",
                     {
                         class: "btn btn-sm btn-icon btn-danger",
                         onClick: () =>
-                            deletePembelian(`/inventori/laporan/${cell.getValue()}`),
+                            deletePembelian(
+                                `/inventori/laporan/${info.getValue()}`
+                            ),
                     },
                     h("i", { class: "la la-trash fs-2" })
                 ),
@@ -312,6 +310,8 @@ onMounted(async () => {
         await filterByDate(selectedDate.value);
     }
 });
+
+const refresh = () => paginateRef.value.refetch();
 </script>
 
 <template>
@@ -418,24 +418,22 @@ onMounted(async () => {
 
 
 <style scoped>
-  /* CARD STYLING */
-  .card {
+.card {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .card-header {
+}
+
+.card-header {
     background-color: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
     padding: 16px;
-  }
-  
-  .card-body {
+}
+
+.card-body {
     padding: 16px;
-  }
-  
-  /* FORM INPUT */
-  .form-control {
+}
+
+.form-control {
     max-width: 300px;
 }
 
@@ -483,51 +481,56 @@ onMounted(async () => {
     display: grid;
     gap: 16px;
     margin: 0;
-    table-layout: auto; /* Ensure table adapts based on content */
-  }
-  
-  th,
-  td {
-    border: 1px solid black;
-    padding: 8px;
-    text-align: center;
-  }
-  
-  th {
-    background-color: #0070C0;
- color: white;
-  }
-  
-  tr:nth-child(even) {
-    background-color: #f2f2f2;
-  }
-  
-  tr:hover {
-    background-color: #ddd;
-  }
-  
-  tfoot {
-    font-weight: bold;
-    background-color: #0070C0;
-    color: white;
-  }
-  
-  /* BUTTON STYLING */
-  .btn {
-    transition: background-color 0.3s ease;
-  }
-  
-  .btn:hover {
-    background-color: #0062a0;
-  }
-  
-  @media (max-width: 768px) {
+}
+
+.detail-item {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 8px;
+}
+
+.detail-item dt {
+    font-weight: 600;
+    color: #666;
+}
+
+.items-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.items-list li {
+    padding: 4px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.items-list li:last-child {
+    border-bottom: none;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.items-container {
+    text-align: left;
+}
+
+.item {
+    padding: 2px 0;
+}
+
+@media (max-width: 768px) {
     .card-body {
-      padding: 8px;
+        padding: 12px;
     }
-  
+
     .form-control {
-      max-width: 100%;
+        max-width: 100%;
     }
 
     .detail-item {
